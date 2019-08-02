@@ -58,7 +58,10 @@ class CityscapesDataset(Dataset):
     def __getitem__(self, index):
         img_path = self.img_paths[index]
         img = np.array(Image.open(img_path))
-        if self.split == 'test':
+
+        if False:
+        # (shiyu) always load labels to locate the pixels belonging to the null class
+        # if self.split == 'test':
             # Resize (Scale & Pad & Crop)
             if self.net_type == 'unet':
                 img = minmax_normalize(img)
@@ -70,7 +73,7 @@ class CityscapesDataset(Dataset):
                 img = resized['image']
             img = img.transpose(2, 0, 1)
             img = torch.FloatTensor(img)
-            return img
+            return {'img': img, 'img_path': str(img_path)}
         else:
             lbl_path = self.lbl_paths[index]
             lbl = np.array(Image.open(lbl_path))
@@ -100,7 +103,7 @@ class CityscapesDataset(Dataset):
                 img = img.transpose(2, 0, 1)
                 img = torch.FloatTensor(img)
                 lbl = torch.LongTensor(lbl)
-            return img, lbl
+            return {'img': img, 'lbl': lbl, 'img_path': str(img_path)}
 
     def encode_mask(self, lbl):
         for c in self.void_classes:

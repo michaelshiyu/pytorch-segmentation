@@ -16,7 +16,7 @@ from dataset.cityscapes import CityscapesDataset
 from utils.preprocess import minmax_normalize
 
 
-device = torch.device('cuda:6' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:4' if torch.cuda.is_available() else 'cpu')
 model = SPPNet(output_channels=19).to(device)
 model_path = '../model/cityscapes_deeplab_v3_plus/model.pth'
 param = torch.load(model_path)
@@ -25,7 +25,7 @@ del param
 
 batch_size = 1
 
-valid_dataset = CityscapesDataset(split='test', net_type='deeplab')
+valid_dataset = CityscapesDataset(base_dir='../data/cityscapes/', split='val', net_type='deeplab')
 valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True)
 
 # images_list = []
@@ -35,19 +35,31 @@ valid_loader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True)
 model.eval()
 with torch.no_grad():
     for i, batched in enumerate(valid_loader):
-        image, label, image_path = batched['img'], batched['lbl'], batched['img_path']
+        # image, label, image_path = batched['img'], batched['lbl'], batched['img_path']
+        image, image_path = batched['img'], batched['img_path']
 
         image_name, _ = os.path.splitext(image_path[0])
         image_np = image.numpy().transpose(0, 2, 3, 1)
-        label_np = label.numpy()
+        # label_np = label.numpy()
 
-        image, label = image.to(device), label.to(device)
+        # image, label = image.to(device), label.to(device)
+        image = image.to(device)
+
+        # add noise
+        if True:
+          # poisson noise
+          image += 0.1 * torch.normal(torch.zeros_like(image), torch.sqrt(image))
+          # normal noise
+          image += torch.normal(torch.zeros_like(image), 0.1 * torch.ones_like(image))
+          image = torch.clamp(image, 0, 1)
+        
         pred = model.tta(image, net_type='deeplab')
         pred = pred.argmax(dim=1)
         pred_np = pred.detach().cpu().numpy()
 
         # Ignore index
-        pred_np[label_np == 255] = 0
+        # pred_np[label_np == 255] = 0
+        pred_np[pred_np == 255] = 0
         # label_np[label_np == 255] = 0
         
         # image_np = minmax_normalize(image_np, norm_range=(0, 1), orig_range=(-1, 1)) * 255.

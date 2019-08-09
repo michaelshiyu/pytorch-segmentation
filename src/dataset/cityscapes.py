@@ -17,7 +17,7 @@ class CityscapesDataset(Dataset):
     valid_classes = [7, 8, 11, 12, 13, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33]
     class_map = dict(zip(valid_classes, range(n_classes)))
 
-    def __init__(self, base_dir='../data/cityscapes', split='train',
+    def __init__(self, base_dir='/newDisk/users/duanshiyu/cityscapes/', split='train',
                  affine_augmenter=None, image_augmenter=None, target_size=(1024, 2048),
                  net_type='unet', ignore_index=255, debug=False):
         self.debug = debug
@@ -27,9 +27,9 @@ class CityscapesDataset(Dataset):
         self.ignore_index = ignore_index
         self.split = 'val' if split == 'valid' else split
 
-        self.img_paths = sorted(self.base_dir.glob(f'leftImg8bit/{self.split}/*/*leftImg8bit.png'))
-        self.lbl_paths = sorted(self.base_dir.glob(f'gtFine/{self.split}/*/*gtFine_labelIds.png'))
-        assert len(self.img_paths) == len(self.lbl_paths)
+        self.img_paths = sorted(self.base_dir.glob(f'leftImg8bit_sequence/{self.split}/*/*leftImg8bit.png'))
+        # self.lbl_paths = sorted(self.base_dir.glob(f'gtFine/{self.split}/*/*gtFine_labelIds.png'))
+        # assert len(self.img_paths) == len(self.lbl_paths)
 
         # Resize
         if isinstance(target_size, str):
@@ -59,7 +59,7 @@ class CityscapesDataset(Dataset):
         img_path = self.img_paths[index]
         img = np.array(Image.open(img_path))
 
-        if False:
+        if True:
         # (shiyu) always load labels to locate the pixels belonging to the null class
         # if self.split == 'test':
             # Resize (Scale & Pad & Crop)
